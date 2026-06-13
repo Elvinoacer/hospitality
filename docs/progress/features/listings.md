@@ -45,4 +45,48 @@ A publicly searchable directory of hotels, lodges, safari camps, and serviced ap
 - Images must be served in WebP format with lazy loading
 - Listings must be indexed by search engines (SSR or SSG via Next.js)
 
-## files to track:
+---
+
+## Tracked files
+
+### ✅ Completed
+
+| File                                      | Requirement(s)                     | Notes                                                                                                                                  |
+| ----------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `types/hotel.ts`                          | FR-H-01, FR-H-02                   | Full domain model: Hotel, RoomType, Review, HotelFilters, PaginatedHotels                                                              |
+| `lib/amenities.ts`                        | FR-H-01                            | Icon registry (16 amenity keys → label + SVG path)                                                                                     |
+| `lib/hotels.ts`                           | FR-H-02, FR-H-06                   | searchHotels (filter + sort + paginate), getHotelBySlug, getRelatedHotels, getAllHotelSlugs — mock data, Prisma-ready                  |
+| `components/hotels/AmenityBadge.tsx`      | FR-H-01                            | Icon-tag badge; reads from AMENITIES registry                                                                                          |
+| `components/hotels/StarRating.tsx`        | FR-H-01, FR-H-05                   | 1–5 star display; sm/md/lg sizes; aria-label                                                                                           |
+| `components/hotels/BookingBar.tsx`        | FR-H-04                            | Sticky bottom bar; scroll-aware visibility; compact date pickers                                                                       |
+| `components/hotels/HotelFiltersPanel.tsx` | FR-H-02                            | All filters: location, dates, stars, price, property type, amenities; URL-synced via router.push                                       |
+| `app/hotels/page.tsx`                     | FR-H-02, FR-H-03, FR-H-05, FR-H-06 | SSR directory page; grid/list toggle; pagination; OG metadata; filters sidebar (desktop only)                                          |
+| `app/hotels/[slug]/page.tsx`              | FR-H-01, FR-H-03, FR-H-04          | SSG detail page; image gallery; amenities grid; room cards; Google Maps embed; reviews; related hotels; Schema.org JSON-LD; BookingBar |
+
+### ✅ Completed (this batch)
+
+| File                                        | Requirement(s)   | What it fixes                                                                                                                                                                |
+| ------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `components/hotels/MobileFiltersDrawer.tsx` | FR-H-02          | Filters were `hidden lg:block` — mobile users had no way to filter. Adds a slide-up bottom drawer with active-filter badge count and focus trap.                             |
+| `components/hotels/PriceRangeSlider.tsx`    | FR-H-02          | Spec requires a KES min–max slider; implementation had bare `<input type="number">` fields. Dual-thumb accessible range slider with live price display.                      |
+| `components/hotels/BookingWidget.tsx`       | FR-H-04          | `PriceSummaryCard` had uncontrolled date inputs with no state. Stateful client component: room selector, date validation, guest counter, live price breakdown, booking href. |
+| `components/hotels/SortSelect.tsx`          | FR-H-02, FR-H-05 | `SortSelect` used `<form method="GET">` which submitted only `sort`, stripping all filter params. Now merges new sort into existing params via router.push.                  |
+| `docs/progress/features/listings.md`        | —                | This file — tracks all implemented files and remaining gaps.                                                                                                                 |
+
+---
+
+## Remaining gaps
+
+### Must-do before FR sign-off
+
+| Gap                                                           | Requirement | File(s) to create                                                                                                                                                                        |
+| ------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wire `MobileFiltersDrawer` into `app/hotels/page.tsx`         | FR-H-02     | Edit `app/hotels/page.tsx`: import + render `<MobileFiltersDrawer>`, swap `SortSelect` inline fn for the new component                                                                   |
+| Wire `BookingWidget` into `app/hotels/[slug]/page.tsx`        | FR-H-04     | Replace `<PriceSummaryCard>` with `<BookingWidget hotel={hotel} />` in the aside                                                                                                         |
+| Wire `PriceRangeSlider` into `HotelFiltersPanel`              | FR-H-02     | Replace the two `<input type="number">` price fields with `<PriceRangeSlider>`                                                                                                           |
+| Schema.org `<script type="application/ld+json">` not rendered | NFR (SEO)   | Next.js `metadata.other["script:ld+json"]` does **not** inject a `<script>` tag. Move JSON-LD into a `<script dangerouslySetInnerHTML>` inside the page JSX, or use a `JsonLd` component |
+| Google Maps API key is hardcoded fallback                     | FR-H-04     | `NEXT_PUBLIC_GOOGLE_MAPS_KEY` must be set in `.env.local`; map shows error without it                                                                                                    |
+| `app/hotels/page.tsx` `ViewToggle` drops filter params        | FR-H-05     | `<Link href={{ query: { view: "grid" } }}>` clobbers all other params — same bug as SortSelect. Merge `view` into `currentParams` like SortSelect does                                   |
+| No `<HotelSearchBar>` (free-text `q` param)                   | FR-H-02     | A search input component that writes `?q=` to the URL alongside other filters                                                                                                            |
+| Image gallery is static (no lightbox / "show all")            | FR-H-01     | The "+N more" overlay on the gallery is non-interactive — tapping it does nothing                                                                                                        |
+| No `next.config.ts` image domains allowlist                   | NFR         | `remotePatterns` must include `images.unsplash.com` (and eventually Cloudinary/S3) or Next.js `<Image>` throws at runtime                                                                |
